@@ -1,0 +1,48 @@
+Parse the file and tokenize it.
+
+Each rule has one of these forms:
+
+(fact)
+(<= fact? cond cond cond)
+
+Nullary relationships are simply bools. Relationships are n-ary if it starts
+with parentheses. Ex:
+
+incheck
+(cell a 1 wr)
+
+==========
+functions vs relations
+==========
+
+=========================
+Ideas:
+
+Quick compile at first, no opts, but with "PGO" to try and predict branches.
+Branches will be: bools/distinct stuff first, simple functions, recursive functions, etc. Try to terminate early! Very last call should be self-recursion. Probably.
+
+Most functions can be table lookup, just looking at a symbol type. Depending on size then maybe others could be made:
+
+byte cell[8][8][12]; // 720 bytes --> inside STATE
+or even reorder that to put powers of 2 last! weird
+
+=========================
+N-way UCT:
+
+At each level of the tree, every player has to select a move. The players
+select a move with a greedy(?) strategy:
+
+UCTSelect() {
+	for each child node {
+		determine which moves got to this position (hash value stored for each
+				role's move) for every role;
+		for each role {
+			select best move with UCT;
+		}
+		take each role's move and make it;
+	}
+}
+
+Research game theory--probably a greedy approach is best. Maximize only our
+points, but maybe some opponent modeling would be best. All other known
+algorithms play with paranoid algorithm...
