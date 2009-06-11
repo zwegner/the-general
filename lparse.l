@@ -1,6 +1,13 @@
 %{
+
 #include <stdio.h>
 #include <string.h>
+
+#include "parse.h"
+#include "Y.tab.h"
+
+extern int yylex(void);
+
 %}
 
 %%
@@ -13,13 +20,14 @@ distinct	return DISTINCT;
 or			return OR;
 legal		return LEGAL;
 does		return DOES;
+next		return NEXT;
 terminal	return TERMINAL;
 goal		return GOAL;
-<=			return RULE;
+\<=			return IMPL;
 
-[a-zA-Z0-9_-]* {
+[a-zA-Z0-9_-]+ {
 				yylval.u_string = strdup(yytext);
-				return ITEM_T;
+				return TOKEN_T;
 			}
 
 [ \t\n]+	; /* whitespace */

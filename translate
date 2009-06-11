@@ -18,8 +18,54 @@ functions vs relations
 =========================
 Ideas:
 
+Problem: we don't know when parsing which arguments are possible for a function.
+How to figure it out? Or we can do it dynamically:
+
+// if a state has this object, assume there is a3 on cell (a1,a2), i.e. its true
+struct cell {
+	int a1, a2, a3;
+	struct cell *next_1,*next_2,*next_3;
+};
+...so that the array can grow at will when we get new arguments. Each dimension is a linked list. So to go to cell [2][1][2] is the pointer:
+
+cell->n1->n1->n2->n3->n3;
+
+This is probably pretty slow though. Maybe only during parsing, or the initial
+PGO stage. Then we could have fixed size arrays.
+
+We also need the symbols, which have an arbitrarily large index space but with
+only a few valid entries, to be mapped into a small range. For chess:
+
+int a1 = map_cell_arg1[arg1]; // file symbols a-h map to 0-7
+int a2 = map_cell_arg2[arg2]; // rank symbols 1-8 map to 0-7
+int a3 = map_cell_arg3[arg3]; // piece symbols wp, bk, etc. map to 0-13
+cell[a1][a2][a3];
+
+Or do we even need that? we just want a list of true cells, and also a list of
+valid args for each arg pos.
+
+struct cell {
+	int a1, a2, a3;
+}; // thats it
+
+add_cell(...) {
+	cell_arg_valid[a1] = 1;
+	cell_arg_valid[a2] = 1;
+	cell_arg_valid[a3] = 1;
+	...
+}
+
+I would guess that the cell_arg_valid stuff should only be in the PGO. But how
+can we be sure that every single possibility is covered?
+
+=========================
+
 Quick compile at first, no opts, but with "PGO" to try and predict branches.
-Branches will be: bools/distinct stuff first, simple functions, recursive functions, etc. Try to terminate early! Very last call should be self-recursion. Probably.
+Branches will be: bools/distinct stuff first, simple functions, recursive
+functions, etc. Try to terminate early! Very last call should be self-recursion.
+Probably. Maybe a dependency graph needs to be made as well, so that functions
+that call our function are recognized as recursive and they are last too.
+Algorithm?
 
 Most functions can be table lookup, just looking at a symbol type. Depending on size then maybe others could be made:
 
@@ -36,11 +82,12 @@ UCTSelect() {
 	for each child node {
 		determine which moves got to this position (hash value stored for each
 				role's move) for every role;
-		for each role {
-			select best move with UCT;
-		}
-		take each role's move and make it;
+		increment statistics for each role's moves;
 	}
+	for each role {
+		select best move with UCT;
+	}
+	take each role's move and make it;
 }
 
 Research game theory--probably a greedy approach is best. Maximize only our
