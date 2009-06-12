@@ -3,8 +3,8 @@
 # This is for generating y.tab.h files
 YFLAGS= -d -b Y
 
-parser:	parse.c Y.tab.c Y.tab.h Lex.yy.c
-	cc parse.c Y.tab.c Lex.yy.c
+parser:	main.c parse.c Y.tab.c Y.tab.h Lex.yy.c
+	cc -Wall -g main.c parse.c Y.tab.c Lex.yy.c
 
 Y.tab.c Y.tab.h: yparse.y
 	yacc ${YFLAGS} $<
