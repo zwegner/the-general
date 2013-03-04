@@ -1,0 +1,92 @@
+===============
+Multiplayer UCT
+===============
+
+Create move-tables for the UCT search so that each player selects a best move
+from their available moves. The stats for each player's moves are the sum of
+the stats for that move given all the possibilities for opponent moves.
+
+Take a node where p1 can play A or B, and p2 can play C or D.
+
+Child nodes have move sets {A,C},{A,D},{B,C},and {B,D}
+Value for A = value(A,C)+value(A,D)
+Value for B = value(B,C)+value(B,D)
+etc.
+
+If A is much better than B, then the statistics for C and D are automatically
+weighted so that they are based more on A, because that is more likely to be
+played.
+
+ex. value matrix:
+
+  A        B
+C 80/100   10/20
+D 30/40    3/10
+
+Value A=110/140, B=13/30
+Value C=90/120 D=33/50
+
+...assuming a cooperative game
+
+This works just as well for cooperative as competitive games!
+
+Data structures?
+
+For each move for each player, you need
+{
+	int wins;
+	int games;
+	int solved;
+}
+...plus some sort of hashkey to verify the move played?
+
+Store these in a hashtable, or a list? If a list, keep a hashtable to index?
+
+Hashtable is bad, since we have to deal with collisions and do we want to
+loop over it at the end?
+
+values[PLAYERS][1000];
+
+If index, we can store in the NODE struct a move index, and just do an update:
+
+for each child
+	for each player
+		wins[child->move[player]] += child->wins[player]
+
+But that requires a full movegen on every move when selecting a node for UCT.
+But, we're doing a full movegen in every node of the playout, so no big deal??
+
+Movegen cache? not yet
+
+Save memory, and we get a faster update. Save quite a bit of memory, probably.
+Moves in TTT are 12 bytes, and *2=24 bytes. An index can be 2 bytes (maybe even 1) per player. Indices give a FIXED size per node as well, for constant player
+count...
+
+==============
+Negamax backup
+==============
+
+Same example:
+
+  A        B
+C 80/100   5/10
+D 60/100   3/10
+
+What is the negamax value of the parent node? p1 chooses A, p2 chooses C.
+Is it really just 80/100? What if the payout matrix is different?
+
+Different strategies:
+just sum of payouts
+maximin
+minimax
+sum of payouts for opponent, then sum of payouts given opponent making best move
+	-->how to do for >2 players? Do this iteratively? no, too slow
+
+maximin should work well, given that most other players use paranoid alg.
+
+=============
+miscellaneous
+=============
+
+Do some major optimizations in case one player only has one move (i.e.,  it's a
+turn taking game)
